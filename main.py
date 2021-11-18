@@ -10,14 +10,32 @@ class AckleyFunction:
         pass
     
     def solution(self):
-       #add implementation
+        #add implementation
 
     def rank(self, sample=None):
-        #add implementation
-    
-    def calculate_fitness(self, chromosome):
        #add implementation
 
+    def square_sum(self, vetor):
+        sum = 0
+        for x in vetor:
+            sum += x*x
+        return sum
+
+    def cos_sum(self, vetor):
+        sum = 0
+        for x in vetor:
+            sum += math.cos(math.pi*2*x)
+        return sum
+
+    def calculate_fitness(self):
+        result = []
+        for x,desvio in self._population:
+            exp1 = (-20.0)* math.exp( (-0.2) *math.sqrt(self.square_sum(x)/30.0) )
+            exp2 = -math.exp(self.cos_sum(x)/30.0)
+            exp =  exp2 + math.exp(1) +exp1 + 20.0 
+            result.append((x,desvio,exp))
+        return result
+    
     def select_random_parents(self, population):
       #add implementation
 
@@ -37,12 +55,17 @@ class AckleyFunction:
         #add implementation
 
     def generate_population(self, size):
-        #add implementation
+        while size > 0:
+            gene = []
+            for i in range(30):
+                gene.append(min((random.random() * 31), 30) - 15)
+            self._population.append((gene, np.random.normal(0, 1)))
+            size -= 1
         
 def main():
-    #ackley_func_opt = AckleyFunction()
+    ackley_func_opt = AckleyFunction()
 
-    #ackley_func_opt.generate_population(100)
+    ackley_func_opt.generate_population(10)
     #solution = ackley_func_opt.solution()
     #population_fitness = ackley_func_opt.rank()
     #count = 0
