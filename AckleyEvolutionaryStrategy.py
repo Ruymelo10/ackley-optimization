@@ -1,5 +1,6 @@
 import random
 import math
+import numpy as np
 
 class OptmizationEvolutionaryStrategy:
     population = []
@@ -18,7 +19,7 @@ class OptmizationEvolutionaryStrategy:
     def generate_population(self, size: int) -> None:
         self.population = []
         for i in range(size):
-            params = random.sample(range(-self.interval, self.interval), self.n)
+            params = np.random.uniform(-self.interval, self.interval, self.n).tolist()
             mutation_step = self.min_mutation_step
             chromosome = params+[mutation_step]
             self.population.append(chromosome)
