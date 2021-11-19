@@ -6,7 +6,7 @@ class AckleyEvolutionaryStrategy:
     interval = 0
     n = 0
 
-    def __init__(self, interval: tuple(float, float), n: int) -> None:
+    def __init__(self, interval: float, n: int) -> None:
         self.interval = interval
         self.n = n
         self.tal = 1/math.sqrt(n)
@@ -22,7 +22,7 @@ class AckleyEvolutionaryStrategy:
     def generate_population(self, size: int) -> None:
         self.population = []
         for i in range(size):
-            object = random.sample(range(self.interval[0], self.interval[1]), self.n)
+            object = random.sample(range(-self.interval, self.interval), self.n)
             mutation_step = 0
             chromosome = object+[mutation_step]
             self.population.append(chromosome)
