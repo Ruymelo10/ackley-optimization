@@ -1,7 +1,7 @@
 import random
 import math
 
-class AckleyEvolutionaryStrategy:
+class OptmizationEvolutionaryStrategy:
     population = []
     interval = 0
     n = 0
@@ -9,21 +9,17 @@ class AckleyEvolutionaryStrategy:
     def __init__(self, interval: float, n: int) -> None:
         self.interval = interval
         self.n = n
-        self.tal = 1/math.sqrt(n)
+        self.min_mutation_step = 1
+        self.learing_rate = 1/math.sqrt(self.n)
 
-    def ackley(self, object: list(float)) -> float:
-        c1, c2, c3, n = 20, 0.2, 2*math.pi, self.n
-        return (
-            -c1*math.exp(-c2*math.sqrt((1/n)*sum([x**2 for x in object])))
-            -math.exp((1/n)*sum([math.cos(c3*x) for x in object]))
-            +c1+1
-        )
+    def function(self, object: list(float)) -> float:
+        raise NotImplementedError
 
     def generate_population(self, size: int) -> None:
         self.population = []
         for i in range(size):
             object = random.sample(range(-self.interval, self.interval), self.n)
-            mutation_step = 0
+            mutation_step = self.min_mutation_step
             chromosome = object+[mutation_step]
             self.population.append(chromosome)
     
@@ -50,7 +46,13 @@ class AckleyEvolutionaryStrategy:
     def mutate(self, chromosome: list(float)) -> list(float):
         mutation_step = chromosome[-1]
         object = chromosome[:-1]
-        mutated_mutation_step = mutation_step*math.exp(random.gauss(0, self.tal))
+
+        mutated_mutation_step = mutation_step*math.exp(random.gauss(0, self.learing_rate))
+
+        # Avoid too little steps
+        if mutated_mutation_step < self.min_mutation_step:
+            mutated_mutation_step = self.min_mutation_step
+
         mutated_object = [x+random.gauss(0, mutated_mutation_step) for x in object]
         mutated_chromosome = mutated_object+mutated_mutation_step
         
@@ -58,6 +60,18 @@ class AckleyEvolutionaryStrategy:
     
     # (μ, λ) selection
     def survival_selection(self, children: list(list(float)), λ: int) -> None:
-        children.sort(key=self.ackley)
-        self.population.sort(key=self.ackley)
+        children.sort(key=self.function)
+        self.population.sort(key=self.function)
         self.population[-λ:] = children[:λ]
+
+class AckleyEvolutionaryStrategy(OptmizationEvolutionaryStrategy):
+    def __init__(self, interval: float, n: int) -> None:
+        super().__init__(interval, n)
+
+    def function(self, object: list(float)) -> float:
+        c1, c2, c3, n = 20, 0.2, 2*math.pi, self.n
+        return (
+            -c1*math.exp(-c2*math.sqrt((1/n)*sum([x**2 for x in object])))
+            -math.exp((1/n)*sum([math.cos(c3*x) for x in object]))
+            +c1+1
+        )
