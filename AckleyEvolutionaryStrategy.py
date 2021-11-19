@@ -12,29 +12,29 @@ class OptmizationEvolutionaryStrategy:
         self.min_mutation_step = 1
         self.learing_rate = 1/math.sqrt(self.n)
 
-    def function(self, object: list(float)) -> float:
+    def fitness(self, params: 'list[float]') -> float:
         raise NotImplementedError
 
     def generate_population(self, size: int) -> None:
         self.population = []
         for i in range(size):
-            object = random.sample(range(-self.interval, self.interval), self.n)
+            params = random.sample(range(-self.interval, self.interval), self.n)
             mutation_step = self.min_mutation_step
-            chromosome = object+[mutation_step]
+            chromosome = params+[mutation_step]
             self.population.append(chromosome)
     
     # Uniform selection of two parents
     def select_parents(self) -> None:
         population_size = len(self.population)
         parents = (
-            self.population[random.uniform(0, population_size)],
-            self.population[random.uniform(0, population_size)]
+            self.population[int(random.uniform(0, population_size))],
+            self.population[int(random.uniform(0, population_size))]
         )
 
         return parents
 
     # Discrete crossover
-    def crossover(self, parents: tuple(list(float), list(float))) -> list(float):
+    def crossover(self, parents: 'tuple[list[float], list[float]]') -> 'list[float]':
         child = []
         for i in range(self.n+1):
             gene = random.choice([parents[0][i], parents[1][i]])
@@ -43,9 +43,9 @@ class OptmizationEvolutionaryStrategy:
         return child
     
     # Uncorrelated mutation with one step size
-    def mutate(self, chromosome: list(float)) -> list(float):
+    def mutate(self, chromosome: 'list[float]') -> 'list[float]':
         mutation_step = chromosome[-1]
-        object = chromosome[:-1]
+        params = chromosome[:-1]
 
         mutated_mutation_step = mutation_step*math.exp(random.gauss(0, self.learing_rate))
 
@@ -53,25 +53,65 @@ class OptmizationEvolutionaryStrategy:
         if mutated_mutation_step < self.min_mutation_step:
             mutated_mutation_step = self.min_mutation_step
 
-        mutated_object = [x+random.gauss(0, mutated_mutation_step) for x in object]
-        mutated_chromosome = mutated_object+mutated_mutation_step
+        mutated_params = [x+random.gauss(0, mutated_mutation_step) for x in params]
+        mutated_chromosome = mutated_params+[mutated_mutation_step]
         
         return mutated_chromosome
     
     # (μ, λ) selection
-    def survival_selection(self, children: list(list(float)), λ: int) -> None:
-        children.sort(key=self.function)
-        self.population.sort(key=self.function)
-        self.population[-λ:] = children[:λ]
+    def survival_selection(self, children: 'list[list[float]]', μ: int) -> None:
+        children.sort(key=self.fitness)
+        self.population.sort(key=self.fitness)
+        self.population[-μ:] = children[:μ]
+    
+    def best_solution(self):
+        self.population.sort(key=self.fitness)
+        best_solution = self.fitness(self.population[0])
+
+        return self.population[0], best_solution
 
 class AckleyEvolutionaryStrategy(OptmizationEvolutionaryStrategy):
     def __init__(self, interval: float, n: int) -> None:
         super().__init__(interval, n)
 
-    def function(self, object: list(float)) -> float:
+    def fitness(self, params: 'list[float]') -> float:
         c1, c2, c3, n = 20, 0.2, 2*math.pi, self.n
         return (
-            -c1*math.exp(-c2*math.sqrt((1/n)*sum([x**2 for x in object])))
-            -math.exp((1/n)*sum([math.cos(c3*x) for x in object]))
+            -c1*math.exp(-c2*math.sqrt((1/n)*sum([x**2 for x in params])))
+            -math.exp((1/n)*sum([math.cos(c3*x) for x in params]))
             +c1+1
         )
+
+def evolution():
+    population_size = 1000
+    interval = 15
+    n = 30
+    max_generation = 200000
+    μ = 30
+    λ = 200
+    optimal_solution = 0
+
+    ackley_evolutionary_strategy = AckleyEvolutionaryStrategy(interval, n)
+    ackley_evolutionary_strategy.generate_population(population_size)
+
+    best_chromosome, best_solution = ackley_evolutionary_strategy.best_solution()
+    generation = 0
+    children = []
+    while best_solution != optimal_solution and generation < max_generation:
+        parents = ackley_evolutionary_strategy.select_parents()
+        child = ackley_evolutionary_strategy.crossover(parents)
+        child = ackley_evolutionary_strategy.mutate(child)
+        children.append(child)
+
+        if len(children) == λ:
+            ackley_evolutionary_strategy.survival_selection(children, μ)
+            children = []
+
+        generation += 1
+        best_chromosome, best_solution = ackley_evolutionary_strategy.best_solution()
+
+    print(f"Best chromosome is: {best_chromosome}")
+    print(f"Best solution is: {best_solution}")
+
+if __name__ == '__main__':
+    evolution()
