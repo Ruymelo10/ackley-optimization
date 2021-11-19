@@ -109,10 +109,17 @@ def evolution():
             children = []
 
         generation += 1
+        last_best_solution = best_solution
         best_chromosome, best_solution = ackley_evolutionary_strategy.best_solution()
 
-    print(f"Best chromosome is: {best_chromosome}")
-    print(f"Best solution is: {best_solution}")
+        if best_solution < last_best_solution:
+            print(f"A new promising chromosome was found in generation {generation} with fitness {best_solution}")
+            print(f"Chromosome: {best_chromosome}")
+            print()
+
+    print(f"Search completed in {generation} generations")
+    print(f"The best chromosome found has fitness of {best_solution}")
+    print(f"Chromosome: {best_chromosome}")
 
 if __name__ == '__main__':
     evolution()
