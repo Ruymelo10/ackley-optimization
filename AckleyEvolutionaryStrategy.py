@@ -1,6 +1,8 @@
 import random
 import math
 import numpy as np
+import statistics
+from report import plot_graphs
 
 class OptmizationEvolutionaryStrategy:
     population = []
@@ -71,6 +73,12 @@ class OptmizationEvolutionaryStrategy:
 
         return self.population[0], best_solution
 
+    def fitness_statistics(self):
+        fitness_population = []
+        for individuo in self.population:
+            fitness_population.append(self.fitness(individuo))
+        return statistics.mean(fitness_population),statistics.pvariance(fitness_population),statistics.pstdev(fitness_population)
+
 class AckleyEvolutionaryStrategy(OptmizationEvolutionaryStrategy):
     def __init__(self, interval: float, n: int) -> None:
         super().__init__(interval, n)
@@ -92,10 +100,15 @@ def evolution():
     λ = 200
     optimal_solution = 0
 
+    best_fitness_by_generation = []
+    statistics_fitness_by_generation = []
+
     ackley_evolutionary_strategy = AckleyEvolutionaryStrategy(interval, n)
     ackley_evolutionary_strategy.generate_population(population_size)
 
     best_chromosome, best_solution = ackley_evolutionary_strategy.best_solution()
+    statistics_fitness_by_generation.append(ackley_evolutionary_strategy.fitness_statistics())
+    best_fitness_by_generation.append(best_solution)
     generation = 0
     children = []
     while best_solution != optimal_solution and generation < max_generation:
@@ -111,6 +124,8 @@ def evolution():
         generation += 1
         last_best_solution = best_solution
         best_chromosome, best_solution = ackley_evolutionary_strategy.best_solution()
+        statistics_fitness_by_generation.append(ackley_evolutionary_strategy.fitness_statistics())
+        best_fitness_by_generation.append(best_solution)
 
         if best_solution < last_best_solution:
             print(f"A new promising chromosome was found in generation {generation} with fitness {best_solution}")
@@ -120,6 +135,8 @@ def evolution():
     print(f"Search completed in {generation} generations")
     print(f"The best chromosome found has fitness of {best_solution}")
     print(f"Chromosome: {best_chromosome}")
+
+    plot_graphs(best_fitness_by_generation,statistics_fitness_by_generation)
 
 if __name__ == '__main__':
     evolution()
