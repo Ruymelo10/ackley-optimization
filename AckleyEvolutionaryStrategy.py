@@ -66,6 +66,13 @@ class OptmizationEvolutionaryStrategy:
         children.sort(key=self.fitness)
         self.population.sort(key=self.fitness)
         self.population[-μ:] = children[:μ]
+
+    # (μ + λ) selection
+    def survival_selection_elitist(self, children: 'list[list[float]]', μ: int) -> None:
+        children.sort(key=self.fitness)
+        self.population.extend(children[:μ])
+        self.population.sort(key=self.fitness)
+        self.population = self.population[:len(self.population)-μ]
     
     def best_solution(self):
         self.population.sort(key=self.fitness)
@@ -111,6 +118,11 @@ def evolution():
     best_fitness_by_generation.append(best_solution)
     generation = 0
     children = []
+
+    print(f"The chromosome in generation {generation} is with fitness {best_solution}")
+    print(f"Chromosome: {best_chromosome}")
+    print()
+
     while best_solution != optimal_solution and generation < max_generation:
         parents = ackley_evolutionary_strategy.select_parents()
         child = ackley_evolutionary_strategy.crossover(parents)
@@ -118,7 +130,7 @@ def evolution():
         children.append(child)
 
         if len(children) == λ:
-            ackley_evolutionary_strategy.survival_selection(children, μ)
+            ackley_evolutionary_strategy.survival_selection_elitist(children, μ)
             children = []
 
         generation += 1
